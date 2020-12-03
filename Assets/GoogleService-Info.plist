@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>167213349872-qjq49k6bam9fgj7s8ntbkh5eulvfujh0.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.167213349872-qjq49k6bam9fgj7s8ntbkh5eulvfujh0</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAP_P_8jEtoyAcmw9MNsSUKdrAFnCzaGeQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>167213349872</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.Laichi.FirebaseCLI</string>
+	<key>PROJECT_ID</key>
+	<string>clan-chat-test</string>
+	<key>STORAGE_BUCKET</key>
+	<string>clan-chat-test.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:167213349872:ios:82b7a704b366cdd82e3b35</string>
+	<key>DATABASE_URL</key>
+	<string>https://clan-chat-test.firebaseio.com</string>
+</dict>
+</plist>

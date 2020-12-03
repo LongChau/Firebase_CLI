@@ -1,0 +1,37 @@
+{
+  "client": [
+    {
+      "services": {
+        "appinvite_service": {
+          "status": 1
+        }, 
+        "analytics_service": {
+          "status": 0
+        }
+      }, 
+      "oauth_client": [
+        {
+          "client_id": "167213349872-qjq49k6bam9fgj7s8ntbkh5eulvfujh0.apps.googleusercontent.com"
+        }
+      ], 
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP_P_8jEtoyAcmw9MNsSUKdrAFnCzaGeQ"
+        }
+      ], 
+      "client_info": {
+        "mobilesdk_app_id": "1:167213349872:ios:82b7a704b366cdd82e3b35", 
+        "android_client_info": {
+          "package_name": "com.Laichi.FirebaseCLI"
+        }
+      }
+    }
+  ], 
+  "configuration_version": "1", 
+  "project_info": {
+    "storage_bucket": "clan-chat-test.appspot.com", 
+    "project_id": "clan-chat-test", 
+    "firebase_url": "https://clan-chat-test.firebaseio.com", 
+    "project_number": "167213349872"
+  }
+}
