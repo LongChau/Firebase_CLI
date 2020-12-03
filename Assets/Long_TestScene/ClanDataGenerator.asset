@@ -1,0 +1,117 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 703a25651eb3b5d4ebd56d8093e1b3ff, type: 3}
+  m_Name: ClanDataGenerator
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes:
+    - Name: _clanData
+      Entry: 7
+      Data: 0|Clan, Assembly-CSharp
+    - Name: id
+      Entry: 1
+      Data: ABCDE
+    - Name: name
+      Entry: 1
+      Data: Exe
+    - Name: decs
+      Entry: 1
+      Data: dfd
+    - Name: tag
+      Entry: 1
+      Data: dfg
+    - Name: rank
+      Entry: 3
+      Data: 2
+    - Name: logoPath
+      Entry: 1
+      Data: abc/uim
+    - Name: leaderID
+      Entry: 1
+      Data: DFBCR
+    - Name: coLeaderID
+      Entry: 1
+      Data: SDSAD
+    - Name: memberIDs
+      Entry: 7
+      Data: 1|Unity.Cloud.Collaborate.Common.SerializableDictionary`2[[System.String,
+        mscorlib],[System.String, mscorlib]], Unity.CollabProxy.Editor
+    - Name: comparer
+      Entry: 7
+      Data: 2|System.Collections.Generic.GenericEqualityComparer`1[[System.String,
+        mscorlib]], mscorlib
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 12
+      Data: 3
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: AAA
+    - Name: $v
+      Entry: 1
+      Data: Data_AAA
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: BBB
+    - Name: $v
+      Entry: 1
+      Data: Data_BBB
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 7
+      Data: 
+    - Name: $k
+      Entry: 1
+      Data: CCC
+    - Name: $v
+      Entry: 1
+      Data: Data_CCC
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: 
+      Entry: 13
+      Data: 
+    - Name: 
+      Entry: 8
+      Data: 
+    - Name: requestCardResetTime
+      Entry: 3
+      Data: 28000
+    - Name: requestCardLimitTime
+      Entry: 3
+      Data: 1
+    - Name: 
+      Entry: 8
+      Data: 
+  group: 
+  hash: -174543560
