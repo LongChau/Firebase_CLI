@@ -14,19 +14,23 @@ using HugeTools.Network;
 using Unity.EditorCoroutines.Editor;
 #endif
 
-namespace TinyTactics.Test.Manager
+namespace FirebaseCLI.Test.Manager
 {
     public class FirebaseManager : MonoSingletonExt<FirebaseManager>
     {
         [SerializeField]
-        private string _dbChat = "server_dev_long/chats";
-        [SerializeField, ReadOnly]
-        private string _clanID;
+        private string _dbChat = "server1/server_test/ClanData/messageReceived";
+        private string chatCountPath = "server1/server_test/ClanData/chatCount";
+        private string leaderPath = "server1/server_test/ClanData/leader";
+
+        [ReadOnly, ShowInInspector]
+        private int count = 0;
+        [ReadOnly, ShowInInspector]
+        private string latestMember = "";
 
         private DatabaseReference _dbRootReference;
 
-        public string ClanID { get => _clanID; set => _clanID = value; }
-        public string DB_ClanChat => $"{_dbChat}/{ClanID}";
+        public string DB_ClanChat => $"{_dbChat}";
 
         public override void Init()
         {
@@ -46,11 +50,35 @@ namespace TinyTactics.Test.Manager
 
             string dbPath = $"{_dbChat}";
             FirebaseDatabase.DefaultInstance
-                .GetReference(dbPath)
-                .ChildAdded += HandleChildAdded;
+                .GetReference(dbPath).ChildAdded += HandleChildAdded;
+            
+            FirebaseDatabase.DefaultInstance
+                .GetReference(chatCountPath).ValueChanged += Handle_ChatValueChanged;
+            
+            FirebaseDatabase.DefaultInstance
+                .GetReference(leaderPath).ValueChanged += Handle_LeaderValueChanged;
+        }
 
-            //FirebaseDatabase.DefaultInstance
-            //    .GetReference(dbPath).ChildChanged
+        private void Handle_LeaderValueChanged(object sender, ValueChangedEventArgs args)
+        {
+            if (args.DatabaseError != null)
+            {
+                Debug.LogError(args.DatabaseError.Message);
+                return;
+            }
+
+            Debug.Log($"Leader: {args.Snapshot.Value}");
+        }
+
+        private void Handle_ChatValueChanged(object sender, ValueChangedEventArgs args)
+        {
+            if (args.DatabaseError != null)
+            {
+                Debug.LogError(args.DatabaseError.Message);
+                return;
+            }
+
+            Debug.Log($"Count: {args.Snapshot.Value}");
         }
 
         private void HandleChildAdded(object sender, ChildChangedEventArgs args)
@@ -61,24 +89,40 @@ namespace TinyTactics.Test.Manager
                 return;
             }
 
-            Debug.Log($"Key: {args.Snapshot.Key} || value: {args.Snapshot.Value}");
+            count++;
+            AddChatCount(count);
+
+            ChatMessage msg = JsonUtility.FromJson<ChatMessage>(args.Snapshot.GetRawJsonValue());
+            latestMember = msg.SenderID;
+
+            //Debug.Log($"Key: {args.Snapshot.Key} || value: {args.Snapshot.Value}");
 
             // Do something with the data in args.Snapshot
             //ChatMessage newMsg = JsonUtility.FromJson<ChatMessage>(args.Snapshot.GetRawJsonValue());
             //Debug.Log($"New message incoming: {JsonUtility.ToJson(newMsg)}");
         }
 
+        public void MakeMeLeader(string leaderName)
+        {
+            //Dictionary<string, object> entryValues = new Dictionary<string, object>
+            //{
+            //    { "leader", leaderName }
+            //};
 
-        //private void HandleValueChanged(object sender, ValueChangedEventArgs args)
-        //{
-        //    if (args.DatabaseError != null)
-        //    {
-        //        Debug.LogError(args.DatabaseError.Message);
-        //        return;
-        //    }
-
-        //    // Do something with the data in args.Snapshot
-        //}
+            var a = FirebaseDatabase.DefaultInstance
+                .GetReference(leaderPath).SetValueAsync(leaderName).ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        // Handle the error...
+                        //Debug.Log($"PushMessage({DB_ClanChat} failed. \n Reason: {task.Exception}");
+                    }
+                    else if (task.IsCompleted)
+                    {
+                        //Debug.Log($"AddChatCount Succeed. {count}");
+                    }
+                });
+        }
 
         public void CreateClan()
         {
@@ -122,8 +166,6 @@ namespace TinyTactics.Test.Manager
                 });
         }
 
-        [ReadOnly, ShowInInspector]
-        private int count = 0;
         public void PushMessage(string dbPath, string messageID, ChatMessage msg)
         {
             string key = FirebaseDatabase.DefaultInstance
@@ -144,8 +186,34 @@ namespace TinyTactics.Test.Manager
                 {
                     //Debug.Log($"PushMessage({dbPath} {key} {msg}) Succeed.");
                     //RetrieveChatCount();
-                    count++;
-                    AddChatCount(count);
+                    //count++;
+                    //AddChatCount(count);
+                }
+            });
+        }
+
+        public void PushMessage(string dbPath, ChatMessage msg)
+        {
+            string key = FirebaseDatabase.DefaultInstance
+                .GetReference(dbPath).Push().Key;
+
+            Dictionary<string, object> entryValues = new Dictionary<string, object>();
+            entryValues.Add(key, msg.ToDictionary());
+
+            var pushTask = FirebaseDatabase.DefaultInstance.GetReference(dbPath).UpdateChildrenAsync(entryValues);
+            pushTask.ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    // Handle the error...
+                    //Debug.Log($"PushMessage({dbPath} {key} {msg}) failed. \n Reason: {task.Exception}");
+                }
+                else if (task.IsCompleted)
+                {
+                    //Debug.Log($"PushMessage({dbPath} {key} {msg}) Succeed.");
+                    //RetrieveChatCount();
+                    //count++;
+                    //AddChatCount(count);
                 }
             });
         }
@@ -206,7 +274,7 @@ namespace TinyTactics.Test.Manager
         [Button]
         private void EnterChat(string username = "", string input = "")
         {
-            string dbPath = $"{_dbChat}/{ClanID}";
+            string dbPath = DB_ClanChat;
             string messageID = StringExtensions.RandomString("UUNNUU");
             string senderID = username;
 
@@ -226,7 +294,7 @@ namespace TinyTactics.Test.Manager
         #region Transaction
         private void AddChatCount(int count)
         {
-            Debug.Log($"AddChatCount({count})");
+            //Debug.Log($"AddChatCount({count})");
             Dictionary<string, object> entryValues = new Dictionary<string, object>
             {
                 { "chatCount", count }
@@ -244,7 +312,7 @@ namespace TinyTactics.Test.Manager
                     }
                     else if (task.IsCompleted)
                     {
-                        Debug.Log($"AddChatCount Succeed. {count}");
+                        //Debug.Log($"AddChatCount Succeed. {count}");
                     }
                 });
         }
@@ -276,13 +344,13 @@ namespace TinyTactics.Test.Manager
         #endregion
 
         #region AUTO_CHAT
-        private static List<string> ListOfUserNames = new List<string>
+        public static List<string> ListOfUserNames = new List<string>
         {
             "Long", "Hiep", "Tina", "Huyen", "Kawamura", "Lien", "Hisasue", "Thong",
             "Anh_1", "Anh_2", "Nguyen", "Khoi", "Nhan", "Hang_1", "Hang_2"
         };
 
-        private static List<string> ListOfChats = new List<string>
+        public static List<string> ListOfChats = new List<string>
         {
             "Long dep trai qua", "Xin chao", "Em chua 18", "Tuyen nguoi yeu", "Deadline is coming", "I dunno", "Thunder, fire. Heed my call", "You need something?",
             "HaoHao", "Sanrio is waiting", "My leige?", "I'm Emperor!", "For Laichi!", "Bla bla bla", "Who is your daddy?"

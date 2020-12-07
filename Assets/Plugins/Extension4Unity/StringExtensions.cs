@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using UnityEngine;
 
 /* *****************************************************************************
  * File:    StringExtensions.cs
@@ -1095,4 +1096,6 @@ public static class StringExtensions
 
         return (l1 == l2);
     }
+
+    public static int Hash(this string name) => Animator.StringToHash(name);
 }
