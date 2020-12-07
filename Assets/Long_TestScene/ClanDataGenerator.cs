@@ -11,7 +11,7 @@ using Sirenix.Serialization;
 using Unity.EditorCoroutines.Editor;
 #endif
 
-namespace TinyTactics.Test.Generator
+namespace FirebaseCLI.Test.Asset
 {
     [CreateAssetMenu(menuName = "Test/ClanDataGenerator")]
     public class ClanDataGenerator : DataAsset
