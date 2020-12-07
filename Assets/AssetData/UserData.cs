@@ -5,6 +5,7 @@ using FirebaseCLI.Test.Manager;
 using Sirenix.OdinInspector;
 using Unity.EditorCoroutines.Editor;
 using UnityEngine;
+using Firebase.Database;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -17,6 +18,7 @@ namespace FirebaseCLI.Test.Asset
     {
         [OnValueChanged("UpdateObjectName")]
         public string username;
+        public int score;
 
 #if UNITY_EDITOR
         private void UpdateObjectName()
@@ -61,6 +63,12 @@ namespace FirebaseCLI.Test.Asset
 #endif
         }
 
+        [Button()]
+        private void Reset()
+        {
+            _loop = 0;
+        }
+
         private int _loop;
         [DisplayAsString, ShowInInspector]
         public int Loop => _loop;
@@ -71,7 +79,7 @@ namespace FirebaseCLI.Test.Asset
             var wait = new WaitForSecondsRealtime(1f);
             while (_loop > 0)
             {
-                yield return waitEndFrame;
+                //yield return waitEndFrame;
                 var chat = FirebaseManager.ListOfChats.RandomItem();
                 EnterChat(chat);
                 _loop--;
@@ -79,6 +87,56 @@ namespace FirebaseCLI.Test.Asset
 
                 //Debug.Log("Finish");
             }
+        }
+
+        [Button]
+        public void AddScore()
+        {
+            score = UnityEngine.Random.RandomRange(50, 1000);
+            AddScoreToLeaders(username, score);
+        }
+
+        private void AddScoreToLeaders(string username, long score)
+        {
+            FirebaseManager.Instance.leaderBoardRef.RunTransaction(mutableData =>
+            {
+                List<object> leaders = mutableData.Value as List<object>;
+
+                if (leaders == null)
+                    leaders = new List<object>();
+                else if (mutableData.ChildrenCount >= FirebaseManager.MaxLeaderBoard)
+                {
+                    long minScore = long.MaxValue;
+                    object minVal = null;
+                    foreach (var child in leaders)
+                    {
+                        if (!(child is Dictionary<string, object>)) continue;
+
+                        long childScore = (long)((Dictionary<string, object>)child)["score"];
+
+                        if (childScore < minScore)
+                        {
+                            minScore = childScore;
+                            minVal = child;
+                        }
+                    }
+                    if (minScore > score)
+                    {
+                        // The new score is lower than the existing 5 scores, abort.
+                        return TransactionResult.Abort();
+                    }
+                    // Remove the lowest score.
+                    leaders.Remove(minVal);
+                }
+
+                // Add the new high score.
+                Dictionary<string, object> newScoreMap = new Dictionary<string, object>();
+                newScoreMap["score"] = score;
+                newScoreMap["username"] = username;
+                leaders.Add(newScoreMap);
+                mutableData.Value = leaders;
+                return TransactionResult.Success(mutableData);
+            });
         }
     }
 }

@@ -22,6 +22,7 @@ namespace FirebaseCLI.Test.Manager
         private string _dbChat = "server1/server_test/ClanData/messageReceived";
         private string chatCountPath = "server1/server_test/ClanData/chatCount";
         private string leaderPath = "server1/server_test/ClanData/leader";
+        private string leaderboardPath = "server1/server_test/ClanData/leaderboard";
 
         [ReadOnly, ShowInInspector]
         private int count = 0;
@@ -29,8 +30,10 @@ namespace FirebaseCLI.Test.Manager
         private string latestMember = "";
 
         private DatabaseReference _dbRootReference;
+        public DatabaseReference leaderBoardRef;
 
         public string DB_ClanChat => $"{_dbChat}";
+        public static long MaxLeaderBoard = 5;
 
         public override void Init()
         {
@@ -47,16 +50,28 @@ namespace FirebaseCLI.Test.Manager
 
             // Get the root reference location of the database.
             _dbRootReference = FirebaseDatabase.DefaultInstance.RootReference;
+            leaderBoardRef = _dbRootReference.Database.GetReference(leaderboardPath);
 
-            string dbPath = $"{_dbChat}";
             FirebaseDatabase.DefaultInstance
-                .GetReference(dbPath).ChildAdded += HandleChildAdded;
-            
+                .GetReference(DB_ClanChat).ChildAdded += HandleChildAdded;
+
             FirebaseDatabase.DefaultInstance
                 .GetReference(chatCountPath).ValueChanged += Handle_ChatValueChanged;
-            
+
             FirebaseDatabase.DefaultInstance
                 .GetReference(leaderPath).ValueChanged += Handle_LeaderValueChanged;
+        }
+
+        private void OnDestroy()
+        {
+            FirebaseDatabase.DefaultInstance
+                .GetReference(DB_ClanChat).ChildAdded -= HandleChildAdded;
+
+            FirebaseDatabase.DefaultInstance
+                .GetReference(chatCountPath).ValueChanged -= Handle_ChatValueChanged;
+
+            FirebaseDatabase.DefaultInstance
+                .GetReference(leaderPath).ValueChanged -= Handle_LeaderValueChanged;
         }
 
         private void Handle_LeaderValueChanged(object sender, ValueChangedEventArgs args)
@@ -78,7 +93,7 @@ namespace FirebaseCLI.Test.Manager
                 return;
             }
 
-            Debug.Log($"Count: {args.Snapshot.Value}");
+            //Debug.Log($"Count: {args.Snapshot.Value}");
         }
 
         private void HandleChildAdded(object sender, ChildChangedEventArgs args)
@@ -133,7 +148,7 @@ namespace FirebaseCLI.Test.Manager
         {
             FirebaseDatabase.DefaultInstance
                 .GetReference(dbPath)
-                .GetValueAsync().ContinueWith(task => 
+                .GetValueAsync().ContinueWith(task =>
                 {
                     if (task.IsFaulted)
                     {
@@ -324,7 +339,8 @@ namespace FirebaseCLI.Test.Manager
             string dbPath = $"server1/server_test/ClanData/chatCount";
             FirebaseDatabase.DefaultInstance
                 .GetReference(dbPath)
-                .GetValueAsync().ContinueWith(task => {
+                .GetValueAsync().ContinueWith(task =>
+                {
                     if (task.IsFaulted)
                     {
                         // Handle the error...
@@ -385,33 +401,49 @@ namespace FirebaseCLI.Test.Manager
         }
         #endregion
 
-        //IEnumerator Send(int loop)
-        //{
-        //    _loop = loop;
-        //    while (_loop > 0)
-        //    {
-        //        var url = "https://us-central1-huge-game-Server.cloudfunctions.net/execute";
-        //        var key = "clans";
-        //        var value = ClanData;
+        
+        [Button]
+        public void AddScoreToLeaders(string username, long score)
+        {
+            leaderBoardRef.RunTransaction(mutableData =>
+            {
+                List<object> leaders = mutableData.Value as List<object>;
 
-        //        var body = new Dictionary<string, object>
-        //        {
-        //            {"TitleId", "server_dev_long"},
-        //            {"FunctionName", "CreateClan"},
-        //            { "ClanID", key},
-        //            { "ClanData", value},
-        //        };
+                if (leaders == null)
+                    leaders = new List<object>();
+                else if (mutableData.ChildrenCount >= MaxLeaderBoard)
+                {
+                    long minScore = long.MaxValue;
+                    object minVal = null;
+                    foreach (var child in leaders)
+                    {
+                        if (!(child is Dictionary<string, object>)) continue;
 
-        //        _loop--;
-        //        yield return Post.Send(url, body, Handle_Post);
+                        long childScore = (long)((Dictionary<string, object>)child)["score"];
 
-        //        Debug.Log("Finish");
-        //    }
+                        if (childScore < minScore)
+                        {
+                            minScore = childScore;
+                            minVal = child;
+                        }
+                    }
+                    if (minScore > score)
+                    {
+                        // The new score is lower than the existing 5 scores, abort.
+                        return TransactionResult.Abort();
+                    }
+                    // Remove the lowest score.
+                    leaders.Remove(minVal);
+                }
 
-        //    void Handle_Post(string result)
-        //    {
-        //        Debug.Log(result);
-        //    }
-        //}
+                // Add the new high score.
+                Dictionary<string, object> newScoreMap = new Dictionary<string, object>();
+                newScoreMap["score"] = score;
+                newScoreMap["username"] = username;
+                leaders.Add(newScoreMap);
+                mutableData.Value = leaders;
+                return TransactionResult.Success(mutableData);
+            });
+        }
     }
 }
