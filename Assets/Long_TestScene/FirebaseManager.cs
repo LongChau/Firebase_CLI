@@ -33,7 +33,7 @@ namespace FirebaseCLI.Test.Manager
         public DatabaseReference leaderBoardRef;
 
         public string DB_ClanChat => $"{_dbChat}";
-        public static long MaxLeaderBoard = 5;
+        public static long MaxLeaderBoard = 3;
 
         public override void Init()
         {
@@ -400,9 +400,8 @@ namespace FirebaseCLI.Test.Manager
             }
         }
         #endregion
-
         
-        [Button]
+        //[Button]
         public void AddScoreToLeaders(string username, long score)
         {
             leaderBoardRef.RunTransaction(mutableData =>
