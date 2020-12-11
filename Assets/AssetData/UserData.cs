@@ -20,6 +20,7 @@ namespace FirebaseCLI.Test.Asset
         [OnValueChanged("UpdateObjectName")]
         public string username;
         public int score;
+        public int counter;
 
 #if UNITY_EDITOR
         private void UpdateObjectName()
@@ -228,6 +229,26 @@ namespace FirebaseCLI.Test.Asset
                 mutableData.Value = leaders;
                 return TransactionResult.Success(mutableData);
             });
+        }
+
+        [Button]
+        public void UpdateCounter()
+        {
+            FirebaseDatabase.DefaultInstance
+                .GetReference(FirebaseManager.Instance.counterPath)
+                .SetValueAsync(counter)
+                .ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        // Handle the error...
+                        //Debug.Log($"PushMessage({DB_ClanChat} failed. \n Reason: {task.Exception}");
+                    }
+                    else if (task.IsCompleted)
+                    {
+                        //Debug.Log($"AddChatCount Succeed. {count}");
+                    }
+                });
         }
     }
 }

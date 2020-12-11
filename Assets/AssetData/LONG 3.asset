@@ -23,4 +23,5 @@ MonoBehaviour:
     SerializationNodes: []
   hash: 934368723
   username: LONG 3
-  score: 309
+  score: 75
+  counter: 0

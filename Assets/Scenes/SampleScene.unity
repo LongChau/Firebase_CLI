@@ -236,7 +236,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dbChat: server1/server_test/ClanData/messageReceived
-  _clanID: 
+  counterPath: server1/server_test/ClanData/counter
+  arrUserDatas:
+  - {fileID: 11400000, guid: 079c08e74530b4450abc05afaacbcae8, type: 2}
+  - {fileID: 11400000, guid: 3ac28a07b40bc4ab7b0631bbff2e7ffa, type: 2}
+  - {fileID: 11400000, guid: 032dd543c36594a6b90ee7fb28528b71, type: 2}
+  - {fileID: 11400000, guid: cef0ffca13b2d47ffbcc7b0ad14b031b, type: 2}
+  - {fileID: 11400000, guid: 4611ad3e139df48b2b3be0c9f9c8bf8d, type: 2}
+  - {fileID: 11400000, guid: fcc2ca8f28bd649d6a0525b392aa219e, type: 2}
+  - {fileID: 11400000, guid: b3617c282c6224b739a12a52a2975d81, type: 2}
+  - {fileID: 11400000, guid: 339c0dd08ceb9435190f5b7177ccc9be, type: 2}
+  - {fileID: 11400000, guid: b9ab900b66c02430f8b1b60ebb60a04a, type: 2}
+  - {fileID: 11400000, guid: 1ca3770cf1ace437ea605be2ee357e7f, type: 2}
 --- !u!4 &1317375058
 Transform:
   m_ObjectHideFlags: 0

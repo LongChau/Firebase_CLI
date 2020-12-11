@@ -7,7 +7,7 @@ using Firebase.Database;
 using Sirenix.OdinInspector;
 using System;
 using HugeTools.Network;
-//using TinyTactics.Test.Data;
+using FirebaseCLI.Test.Asset;
 
 #if UNITY_EDITOR
 //using Firebase.Unity.Editor;
@@ -18,11 +18,14 @@ namespace FirebaseCLI.Test.Manager
 {
     public class FirebaseManager : MonoSingletonExt<FirebaseManager>
     {
+        //https://meshbuttondata-default-rtdb.firebaseio.com/Items.json
         [SerializeField]
         private string _dbChat = "server1/server_test/ClanData/messageReceived";
         private string chatCountPath = "server1/server_test/ClanData/chatCount";
         private string leaderPath = "server1/server_test/ClanData/leader";
         private string leaderboardPath = "server1/server_test/ClanData/leaderboard";
+        [HideInInspector]
+        public string counterPath = "server1/server_test/ClanData/counter";
 
         [ReadOnly, ShowInInspector]
         private int count = 0;
@@ -34,6 +37,8 @@ namespace FirebaseCLI.Test.Manager
 
         public string DB_ClanChat => $"{_dbChat}";
         public static long MaxLeaderBoard = 3;
+
+        public UserData[] arrUserDatas;
 
         public override void Init()
         {
@@ -53,10 +58,10 @@ namespace FirebaseCLI.Test.Manager
             leaderBoardRef = _dbRootReference.Database.GetReference(leaderboardPath);
 
             FirebaseDatabase.DefaultInstance
-                .GetReference(DB_ClanChat).ChildAdded += HandleChildAdded;
+                .GetReference(DB_ClanChat).ChildAdded += HandleChatAdded;
 
             FirebaseDatabase.DefaultInstance
-                .GetReference(chatCountPath).ValueChanged += Handle_ChatValueChanged;
+                .GetReference(chatCountPath).ValueChanged += Handle_ChatCountChanged;
 
             FirebaseDatabase.DefaultInstance
                 .GetReference(leaderPath).ValueChanged += Handle_LeaderValueChanged;
@@ -65,10 +70,10 @@ namespace FirebaseCLI.Test.Manager
         private void OnDestroy()
         {
             FirebaseDatabase.DefaultInstance
-                .GetReference(DB_ClanChat).ChildAdded -= HandleChildAdded;
+                .GetReference(DB_ClanChat).ChildAdded -= HandleChatAdded;
 
             FirebaseDatabase.DefaultInstance
-                .GetReference(chatCountPath).ValueChanged -= Handle_ChatValueChanged;
+                .GetReference(chatCountPath).ValueChanged -= Handle_ChatCountChanged;
 
             FirebaseDatabase.DefaultInstance
                 .GetReference(leaderPath).ValueChanged -= Handle_LeaderValueChanged;
@@ -85,7 +90,7 @@ namespace FirebaseCLI.Test.Manager
             Debug.Log($"Leader: {args.Snapshot.Value}");
         }
 
-        private void Handle_ChatValueChanged(object sender, ValueChangedEventArgs args)
+        private void Handle_ChatCountChanged(object sender, ValueChangedEventArgs args)
         {
             if (args.DatabaseError != null)
             {
@@ -96,7 +101,7 @@ namespace FirebaseCLI.Test.Manager
             //Debug.Log($"Count: {args.Snapshot.Value}");
         }
 
-        private void HandleChildAdded(object sender, ChildChangedEventArgs args)
+        private void HandleChatAdded(object sender, ChildChangedEventArgs args)
         {
             if (args.DatabaseError != null)
             {
@@ -444,5 +449,19 @@ namespace FirebaseCLI.Test.Manager
                 return TransactionResult.Success(mutableData);
             });
         }
+
+        [Button]
+        public void IncreaseCounter()
+        {
+            for (int i = 0; i < arrUserDatas.Length; i++)
+            {
+                int value = UnityEngine.Random.Range(1, 100);
+                arrUserDatas[i].counter = value;
+                arrUserDatas[i].UpdateCounter();
+            }
+        }
+
+        [ContextMenu("ShuffleUserDatas")]
+        public void ShuffleUserDatas() => arrUserDatas.Shuffle();
     }
 }
