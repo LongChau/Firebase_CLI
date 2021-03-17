@@ -7,7 +7,7 @@ using Firebase.Database;
 using Sirenix.OdinInspector;
 using System;
 using HugeTools.Network;
-//using TinyTactics.Test.Data;
+using FirebaseCLI.Test.Asset;
 
 #if UNITY_EDITOR
 //using Firebase.Unity.Editor;
@@ -18,10 +18,14 @@ namespace FirebaseCLI.Test.Manager
 {
     public class FirebaseManager : MonoSingletonExt<FirebaseManager>
     {
+        //https://meshbuttondata-default-rtdb.firebaseio.com/Items.json
         [SerializeField]
         private string _dbChat = "server1/server_test/ClanData/messageReceived";
         private string chatCountPath = "server1/server_test/ClanData/chatCount";
         private string leaderPath = "server1/server_test/ClanData/leader";
+        private string leaderboardPath = "server1/server_test/ClanData/leaderboard";
+        [HideInInspector]
+        public string counterPath = "server1/server_test/ClanData/counter";
 
         [ReadOnly, ShowInInspector]
         private int count = 0;
@@ -29,8 +33,12 @@ namespace FirebaseCLI.Test.Manager
         private string latestMember = "";
 
         private DatabaseReference _dbRootReference;
+        public DatabaseReference leaderBoardRef;
 
         public string DB_ClanChat => $"{_dbChat}";
+        public static long MaxLeaderBoard = 3;
+
+        public UserData[] arrUserDatas;
 
         public override void Init()
         {
@@ -47,16 +55,28 @@ namespace FirebaseCLI.Test.Manager
 
             // Get the root reference location of the database.
             _dbRootReference = FirebaseDatabase.DefaultInstance.RootReference;
+            leaderBoardRef = _dbRootReference.Database.GetReference(leaderboardPath);
 
-            string dbPath = $"{_dbChat}";
             FirebaseDatabase.DefaultInstance
-                .GetReference(dbPath).ChildAdded += HandleChildAdded;
-            
+                .GetReference(DB_ClanChat).ChildAdded += HandleChatAdded;
+
             FirebaseDatabase.DefaultInstance
-                .GetReference(chatCountPath).ValueChanged += Handle_ChatValueChanged;
-            
+                .GetReference(chatCountPath).ValueChanged += Handle_ChatCountChanged;
+
             FirebaseDatabase.DefaultInstance
                 .GetReference(leaderPath).ValueChanged += Handle_LeaderValueChanged;
+        }
+
+        private void OnDestroy()
+        {
+            FirebaseDatabase.DefaultInstance
+                .GetReference(DB_ClanChat).ChildAdded -= HandleChatAdded;
+
+            FirebaseDatabase.DefaultInstance
+                .GetReference(chatCountPath).ValueChanged -= Handle_ChatCountChanged;
+
+            FirebaseDatabase.DefaultInstance
+                .GetReference(leaderPath).ValueChanged -= Handle_LeaderValueChanged;
         }
 
         private void Handle_LeaderValueChanged(object sender, ValueChangedEventArgs args)
@@ -70,7 +90,7 @@ namespace FirebaseCLI.Test.Manager
             Debug.Log($"Leader: {args.Snapshot.Value}");
         }
 
-        private void Handle_ChatValueChanged(object sender, ValueChangedEventArgs args)
+        private void Handle_ChatCountChanged(object sender, ValueChangedEventArgs args)
         {
             if (args.DatabaseError != null)
             {
@@ -78,10 +98,10 @@ namespace FirebaseCLI.Test.Manager
                 return;
             }
 
-            Debug.Log($"Count: {args.Snapshot.Value}");
+            //Debug.Log($"Count: {args.Snapshot.Value}");
         }
 
-        private void HandleChildAdded(object sender, ChildChangedEventArgs args)
+        private void HandleChatAdded(object sender, ChildChangedEventArgs args)
         {
             if (args.DatabaseError != null)
             {
@@ -95,7 +115,7 @@ namespace FirebaseCLI.Test.Manager
             ChatMessage msg = JsonUtility.FromJson<ChatMessage>(args.Snapshot.GetRawJsonValue());
             latestMember = msg.SenderID;
 
-            //Debug.Log($"Key: {args.Snapshot.Key} || value: {args.Snapshot.Value}");
+            Debug.Log($"Key: {args.Snapshot.Key} || value: {args.Snapshot.Value}");
 
             // Do something with the data in args.Snapshot
             //ChatMessage newMsg = JsonUtility.FromJson<ChatMessage>(args.Snapshot.GetRawJsonValue());
@@ -133,7 +153,7 @@ namespace FirebaseCLI.Test.Manager
         {
             FirebaseDatabase.DefaultInstance
                 .GetReference(dbPath)
-                .GetValueAsync().ContinueWith(task => 
+                .GetValueAsync().ContinueWith(task =>
                 {
                     if (task.IsFaulted)
                     {
@@ -324,7 +344,8 @@ namespace FirebaseCLI.Test.Manager
             string dbPath = $"server1/server_test/ClanData/chatCount";
             FirebaseDatabase.DefaultInstance
                 .GetReference(dbPath)
-                .GetValueAsync().ContinueWith(task => {
+                .GetValueAsync().ContinueWith(task =>
+                {
                     if (task.IsFaulted)
                     {
                         // Handle the error...
@@ -371,7 +392,7 @@ namespace FirebaseCLI.Test.Manager
         IEnumerator Send(int loop)
         {
             _loop = loop;
-            var wait = new WaitForEndOfFrame();
+            var wait = new WaitForSecondsRealtime(1);
             while (_loop > 0)
             {
                 var username = ListOfUserNames.RandomItem();
@@ -384,34 +405,63 @@ namespace FirebaseCLI.Test.Manager
             }
         }
         #endregion
+        
+        //[Button]
+        public void AddScoreToLeaders(string username, long score)
+        {
+            leaderBoardRef.RunTransaction(mutableData =>
+            {
+                List<object> leaders = mutableData.Value as List<object>;
 
-        //IEnumerator Send(int loop)
-        //{
-        //    _loop = loop;
-        //    while (_loop > 0)
-        //    {
-        //        var url = "https://us-central1-huge-game-Server.cloudfunctions.net/execute";
-        //        var key = "clans";
-        //        var value = ClanData;
+                if (leaders == null)
+                    leaders = new List<object>();
+                else if (mutableData.ChildrenCount >= MaxLeaderBoard)
+                {
+                    long minScore = long.MaxValue;
+                    object minVal = null;
+                    foreach (var child in leaders)
+                    {
+                        if (!(child is Dictionary<string, object>)) continue;
 
-        //        var body = new Dictionary<string, object>
-        //        {
-        //            {"TitleId", "server_dev_long"},
-        //            {"FunctionName", "CreateClan"},
-        //            { "ClanID", key},
-        //            { "ClanData", value},
-        //        };
+                        long childScore = (long)((Dictionary<string, object>)child)["score"];
 
-        //        _loop--;
-        //        yield return Post.Send(url, body, Handle_Post);
+                        if (childScore < minScore)
+                        {
+                            minScore = childScore;
+                            minVal = child;
+                        }
+                    }
+                    if (minScore > score)
+                    {
+                        // The new score is lower than the existing 5 scores, abort.
+                        return TransactionResult.Abort();
+                    }
+                    // Remove the lowest score.
+                    leaders.Remove(minVal);
+                }
 
-        //        Debug.Log("Finish");
-        //    }
+                // Add the new high score.
+                Dictionary<string, object> newScoreMap = new Dictionary<string, object>();
+                newScoreMap["score"] = score;
+                newScoreMap["username"] = username;
+                leaders.Add(newScoreMap);
+                mutableData.Value = leaders;
+                return TransactionResult.Success(mutableData);
+            });
+        }
 
-        //    void Handle_Post(string result)
-        //    {
-        //        Debug.Log(result);
-        //    }
-        //}
+        [Button]
+        public void IncreaseCounter()
+        {
+            for (int i = 0; i < arrUserDatas.Length; i++)
+            {
+                int value = UnityEngine.Random.Range(1, 100);
+                arrUserDatas[i].counter = value;
+                arrUserDatas[i].UpdateCounter();
+            }
+        }
+
+        [ContextMenu("ShuffleUserDatas")]
+        public void ShuffleUserDatas() => arrUserDatas.Shuffle();
     }
 }
