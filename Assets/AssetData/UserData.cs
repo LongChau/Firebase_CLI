@@ -122,6 +122,7 @@ namespace FirebaseCLI.Test.Asset
                 if (task_1.IsFaulted)
                 {
                     // Handle the error...
+                    Debug.Log("Error");
                 }
                 else if (task_1.IsCompleted)
                 {

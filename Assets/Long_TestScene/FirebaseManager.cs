@@ -115,7 +115,7 @@ namespace FirebaseCLI.Test.Manager
             ChatMessage msg = JsonUtility.FromJson<ChatMessage>(args.Snapshot.GetRawJsonValue());
             latestMember = msg.SenderID;
 
-            //Debug.Log($"Key: {args.Snapshot.Key} || value: {args.Snapshot.Value}");
+            Debug.Log($"Key: {args.Snapshot.Key} || value: {args.Snapshot.Value}");
 
             // Do something with the data in args.Snapshot
             //ChatMessage newMsg = JsonUtility.FromJson<ChatMessage>(args.Snapshot.GetRawJsonValue());
@@ -392,7 +392,7 @@ namespace FirebaseCLI.Test.Manager
         IEnumerator Send(int loop)
         {
             _loop = loop;
-            var wait = new WaitForEndOfFrame();
+            var wait = new WaitForSecondsRealtime(1);
             while (_loop > 0)
             {
                 var username = ListOfUserNames.RandomItem();
