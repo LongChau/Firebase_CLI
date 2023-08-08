@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using Firebase;
+using Firebase.Extensions;
 using Firebase.Database;
 using Sirenix.OdinInspector;
 using System;
@@ -16,7 +17,7 @@ using Unity.EditorCoroutines.Editor;
 
 namespace FirebaseCLI.Test.Manager
 {
-    public class FirebaseManager : MonoSingletonExt<FirebaseManager>
+    public partial class FirebaseManager : MonoSingletonExt<FirebaseManager>
     {
         //https://meshbuttondata-default-rtdb.firebaseio.com/Items.json
         [SerializeField]
@@ -52,7 +53,6 @@ namespace FirebaseCLI.Test.Manager
             // Set this before calling into the realtime database.
             //FirebaseApp.DefaultInstance.SetEditorDatabaseUrl("https://huge-game-server.firebaseio.com");
 #endif
-
             // Get the root reference location of the database.
             _dbRootReference = FirebaseDatabase.DefaultInstance.RootReference;
             leaderBoardRef = _dbRootReference.Database.GetReference(leaderboardPath);
@@ -195,19 +195,19 @@ namespace FirebaseCLI.Test.Manager
             entryValues.Add(key, msg.ToDictionary());
 
             var pushTask = FirebaseDatabase.DefaultInstance.GetReference(dbPath).UpdateChildrenAsync(entryValues);
-            pushTask.ContinueWith(task =>
+            pushTask.ContinueWithOnMainThread(task =>
             {
                 if (task.IsFaulted)
                 {
                     // Handle the error...
-                    //Debug.Log($"PushMessage({dbPath} {key} {msg}) failed. \n Reason: {task.Exception}");
+                    Debug.Log($"PushMessage({dbPath} {key} {msg}) failed. \n Reason: {task.Exception}");
                 }
                 else if (task.IsCompleted)
                 {
-                    //Debug.Log($"PushMessage({dbPath} {key} {msg}) Succeed.");
-                    //RetrieveChatCount();
-                    //count++;
-                    //AddChatCount(count);
+                    Debug.Log($"PushMessage({dbPath} {key} {msg}) Succeed.");
+                    RetrieveChatCount();
+                    count++;
+                    AddChatCount(count);
                 }
             });
         }
